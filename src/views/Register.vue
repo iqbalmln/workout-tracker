@@ -1,11 +1,14 @@
 <template>
   <div class="max-w-screen-sm mx-auto px-4 py-10">
     <!-- Error handling -->
-    <div v-if="errorMsg" class="mb-10 p-4 rounded-md bg-light-grey">
-      <p class="text-red-500">{{ errorMsg }}</p>
+    <div v-if="errorMsg" class="mb-10 p-4 rounded-md bg-red-500">
+      <p class="text-white">{{ errorMsg }}</p>
     </div>
     <!-- Register -->
-    <form class="p-8 flex flex-col bg-light-grey rounded-md shadow-lg">
+    <form
+      @submit.prevent="register"
+      class="p-8 flex flex-col bg-light-grey rounded-md shadow-lg"
+    >
       <h1 class="text-3xl text-at-light-green mb-4">Register</h1>
       <div class="flex flex-col mb-2">
         <label for="email" class="mb-1 text-sm text-at-light-green"
@@ -53,28 +56,59 @@
       >
         Register
       </button>
-      <router-link :to="{name: 'Login'}" class="text-center mt-4 text-sm">Already have an account?<span class="text-at-light-green"> Login</span></router-link>
+      <router-link :to="{ name: 'Login' }" class="text-center mt-4 text-sm"
+        >Already have an account?<span class="text-at-light-green">
+          Login</span
+        ></router-link
+      >
     </form>
   </div>
 </template>
 
 <script>
 import { ref } from "vue";
+import { supabase } from "../supabase/init";
+import { useRouter } from "vue-router";
 export default {
   name: "register",
   setup() {
     // Create data / vars
+    const router = useRouter();
     const email = ref(null);
     const password = ref(null);
     const confirmPassword = ref(null);
     const errorMsg = ref(null);
+
     // Register function
+    const register = async () => {
+      if (password.value === confirmPassword.value) {
+        try {
+          const { error } = await supabase.auth.signUp({
+            email: email.value,
+            password: password.value,
+          });
+          if (error) throw error;
+          router.push({ name: "Login" });
+        } catch (error) {
+          errorMsg.value = error.message;
+          setTimeout(() => {
+            errorMsg.value = null;
+          }, 5000);
+        }
+        return;
+      }
+      errorMsg.value = "Error: Password do not match";
+      setTimeout(() => {
+        errorMsg.value = null;
+      }, 5000);
+    };
 
     return {
       email,
-      password,
       confirmPassword,
       errorMsg,
+      password,
+      register,
     };
   },
 };
