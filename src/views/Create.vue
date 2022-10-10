@@ -12,7 +12,7 @@
     <!-- Create -->
     <div class="p-8 flex items-start bg-light-grey rounded-md shadow-lg">
       <!-- Form -->
-      <form class="flex flex-col gap-y-5 w-full">
+      <form @submit.prevent="createWorkout" class="flex flex-col gap-y-5 w-full">
         <h1 class="text-2xl text-at-light-green">Record Workout</h1>
         <!-- Workout name -->
         <div class="flex flex-col">
@@ -36,6 +36,7 @@
             id="workout-type"
             class="p-2 text-gray-500 focus:outline-none"
             required
+            @change="workoutChange"
             v-model="workoutType"
           >
             <option value="select-workout">Select Workout</option>
@@ -98,13 +99,15 @@
               />
             </div>
             <img
+              @click="deleteExercise(item.id)"
               src="@/assets/images/trash-light-green.png"
               alt=""
               class="h-4 w-auto absolute -left-5 cursor-pointer"
             />
           </div>
           <button
-            type="submit"
+            @click="addExercise"
+            type="button"
             class="py-2 px-6 rounded-sm self-start text-sm
             text-white bg-at-light-green duration-200
             border-solid border-2 border-transparent
@@ -172,13 +175,15 @@
               />
             </div>
             <img
+              @click="deleteExercise(item.id)"
               src="@/assets/images/trash-light-green.png"
               alt=""
               class="h-4 w-auto absolute -left-5 cursor-pointer"
             />
           </div>
           <button
-            type="submit"
+            @click="addExercise"
+            type="button"
             class="py-2 px-6 rounded-sm self-start text-sm
             text-white bg-at-light-green duration-200
             border-solid border-2 border-transparent
@@ -205,22 +210,81 @@
 
 <script>
 import { ref } from "vue";
+import { uid } from "uid"
+import { supabase } from "../supabase/init"
 export default {
   name: "create",
   setup() {
     // Create data
     const workoutName = ref("");
     const workoutType = ref("select-workout");
-    const exercises = ref([1]);
+    const exercises = ref([]);
     const statusMsg = ref(null);
     const errorMsg = ref(null);
     // Add exercise
+    const addExercise = () => {
+      if (workoutType.value === "strength") {
+        exercises.value.push({
+          id: uid(),
+          exercise: "",
+          sets: "",
+          reps: "",
+          weight: "",
+        });
+        return;
+      }
+      exercises.value.push({
+        id: uid(),
+        cardioType: "",
+        distance: "",
+        duration: "",
+        pace: "",
+      })
+    }
 
     // Delete exercise
+    const deleteExercise = (id) => {
+      if(exercises.value.length > 1) {
+        exercises.value = exercises.value.filter(exercise => exercise.id !== id)
+        return;
+      }
+      errorMsg.value = "Error: Cannot remove, need to at least have one exercise"
+      setTimeout(() => {
+        errorMsg.value = false
+      }, 5000)
+    }
 
     // Listens for chaging of workout type input
+    const workoutChange = () => {
+      exercises.value = [];
+      addExercise()
+    }
 
     // Create workout
+    const createWorkout = async () => {
+      try {
+        const { error } = await supabase.from('workouts').insert([
+          {
+            workoutName: workoutName.value,
+            workoutType: workoutType.value,
+            exercises: exercises.value
+          }
+        ]);
+        if (error) throw error;
+        statusMsg.value = 'Success: Woekout created!'
+        workoutName.value = null
+        workoutType.value = 'select-workout'
+        exercises.value = [];
+        setTimeout(() => {
+          statusMsg.value = false;
+        }, 5000)
+      } catch(error) {
+        errorMsg.value = `Error: ${error.message}`
+        setTimeout(() => {
+          errorMsg.value = false
+        }, 5000)
+      }
+    }
 
     return {
       workoutName,
@@ -228,6 +292,10 @@ export default {
       exercises,
       statusMsg,
       errorMsg,
+      addExercise,
+      workoutChange,
+      deleteExercise,
+      createWorkout
     };
   },
 };
