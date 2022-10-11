@@ -17,12 +17,12 @@
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <router-link
         class="flex flex-col items-center bg-light-grey p-8 shadow-md cursor-pointer"
-        :to="{name: ''}"
+        :to="{name: 'View-Workout', params: { workoutId: workout.id }}"
         v-for="(workout, index) in data" :key="index"
       >
         <!-- Cardio img -->
-        <img v-if="workout.workoutType === 'cardio'" src="@/assets/images/dumbbell-light-green.png" class="h-24 w-auto" alt="">
-        <img v-else src="@/assets/images/running-light-green.png" class="h-24 w-auto" alt="">
+        <img v-if="workout.workoutType === 'cardio'" src="@/assets/images/running-light-green.png" class="h-24 w-auto" alt="">
+        <img v-else src="@/assets/images/dumbbell-light-green.png" class="h-24 w-auto" alt="">
 
         <p class="mt-6 py-1 px-3 text-xs text-white bg-at-light-green shadow rounded-lg">
           {{ workout.workoutType }}
